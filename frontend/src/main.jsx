@@ -8,6 +8,7 @@ import Watchlist from "./components/Watchlist";
 import PortfolioPanel from "./components/PortfolioPanel";
 import AnalysisPanel from "./components/AnalysisPanel";
 import BotPanel from "./components/BotPanel";
+import SearchPanel from "./components/SearchPanel";
 import {
   analyzeStock as apiAnalyzeStock,
   getPortfolio,
@@ -184,49 +185,19 @@ function App() {
       {message && <div className="message">{message}</div>}
 
       <section className="grid top-grid">
-        <div className="card hero">
-          <div className="card-title">
-            <Search size={20} />
-            Analyze stock
-          </div>
-          <div className="search-row">
-            <div className="search-wrapper">
-              <input
-                value={ticker}
-                onChange={(e) => searchStocks(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && analyzeStock()}
-                placeholder="Search ticker or company..."
-              />
 
-  {searchResults.length > 0 && (
-    <div className="search-dropdown">
-      {searchResults.map((stock) => (
-        <button
-          key={stock.ticker}
-          className="search-result"
-          onClick={() => selectSearchResult(stock.ticker)}
-        >
-          <span>{stock.name}</span>
-          <b>{stock.ticker}</b>
-          <small>{stock.sector}</small>
-        </button>
-      ))}
-    </div>
-  )}
-</div>
-            <button onClick={analyzeStock} disabled={loading}>
-              Analyze
-            </button>
-          </div>
-          <div className="actions">
-            <button onClick={buyStock}>Buy 1</button>
-            <button onClick={sellStock}>Sell 1</button>
-            <button className="watch-btn" onClick={addToWatchlist}>Add Watchlist</button>
-            <button className="bot-btn" onClick={runBot}>
-              <PlayCircle size={16} /> Run Bot
-            </button>
-          </div>
-        </div>
+       <SearchPanel
+          ticker={ticker}
+         loading={loading}
+         searchResults={searchResults}
+         onSearchChange={searchStocks}
+         onSelectResult={selectSearchResult}
+         onAnalyze={analyzeStock}
+          onBuy={buyStock}
+          onSell={sellStock}
+         onAddWatchlist={addToWatchlist}
+          onRunBot={runBot}
+/>
 
         <div className="card metric">
           <div className="card-title">
