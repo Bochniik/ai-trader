@@ -5,6 +5,7 @@ import "./styles.css";
 import SignalBadge from "./components/SignalBadge";
 import CandleChart from "./components/CandleChart";
 import Watchlist from "./components/Watchlist";
+import PortfolioPanel from "./components/PortfolioPanel";
 
 const API = "http://127.0.0.1:8000";
 
