@@ -4,6 +4,7 @@ import { Bot, Search, Wallet, TrendingUp, Activity, PlayCircle } from "lucide-re
 import "./styles.css";
 import SignalBadge from "./components/SignalBadge";
 import CandleChart from "./components/CandleChart";
+import Watchlist from "./components/Watchlist";
 
 const API = "http://127.0.0.1:8000";
 
@@ -244,26 +245,11 @@ function App() {
         </div>
       </section>
 
-
-      <section className="card watchlist-card">
-        <div className="card-title">
-          <Search size={20} />
-          Watchlist
-        </div>
-
-        <div className="watchlist">
-          {watchlist.map((symbol) => (
-            <div className="watch-item" key={symbol}>
-              <button className="watch-symbol" onClick={() => selectWatchlistStock(symbol)}>
-                {symbol}
-              </button>
-              <button className="remove-btn" onClick={() => removeFromWatchlist(symbol)}>
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
+<Watchlist
+  watchlist={watchlist}
+  onSelectStock={selectWatchlistStock}
+  onRemoveStock={removeFromWatchlist}
+/>
 
       <section className="card chart-card">
         <div className="card-title">
