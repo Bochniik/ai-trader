@@ -8,8 +8,15 @@ import Watchlist from "./components/Watchlist";
 import PortfolioPanel from "./components/PortfolioPanel";
 import AnalysisPanel from "./components/AnalysisPanel";
 import BotPanel from "./components/BotPanel";
+import {
+  analyzeStock as apiAnalyzeStock,
+  getPortfolio,
+  buyStock as apiBuyStock,
+  sellStock as apiSellStock,
+  runBot as apiRunBot,
+  searchStocks as apiSearchStocks,
+} from "./api/api";
 
-const API = "http://127.0.0.1:8000";
 
 function App() {
   const [ticker, setTicker] = useState("AAPL");
@@ -22,14 +29,6 @@ function App() {
   const [message, setMessage] = useState("");
   const [chartRefresh, setChartRefresh] = useState(0);
 
-  async function request(path, options = {}) {
-    const res = await fetch(`${API}${path}`, options);
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.detail || "Request failed");
-    }
-    return data;
-  }
 
   function addToWatchlist() {
     const cleanTicker = ticker.trim().toUpperCase();
@@ -53,7 +52,7 @@ function App() {
     }
 
     try {
-      const data = await request(`/search?q=${encodeURIComponent(clean)}`);
+      const data = await apiSearchStocks(clean);
       setSearchResults(data.results || []);
     } catch (err) {
       setSearchResults([]);
@@ -68,7 +67,7 @@ function App() {
     try {
       setLoading(true);
       setMessage("");
-      const data = await request(`/analyze/${symbol}`);
+      const data = await apiSearchStocks(cleanValue);
       setAnalysis(data);
       setChartRefresh((old) => old + 1);
     } catch (err) {
@@ -88,7 +87,7 @@ function App() {
     try {
       setLoading(true);
       setMessage("");
-      const data = await request(`/analyze/${symbol}`);
+      const data = await apiAnalyzeStock(symbol);
       setAnalysis(data);
       setChartRefresh((old) => old + 1);
     } catch (err) {
@@ -105,7 +104,7 @@ function App() {
       setSearchResults([]);
       const cleanTicker = ticker.trim().toUpperCase() || "AAPL";
       setTicker(cleanTicker);
-      const data = await request(`/analyze/${cleanTicker}`);
+      const data = await apiAnalyzeStock(cleanTicker);
       setAnalysis(data);
       setChartRefresh((old) => old + 1);
     } catch (err) {
@@ -117,7 +116,7 @@ function App() {
 
   async function loadPortfolio() {
     try {
-      const data = await request("/paper/portfolio");
+      const data = await getPortfolio();
       setPortfolio(data);
     } catch (err) {
       setMessage(err.message);
@@ -126,7 +125,7 @@ function App() {
 
   async function buyStock() {
     try {
-      const data = await request(`/paper/buy/${ticker}?quantity=1`, { method: "POST" });
+      const data = await getPortfolio();
       setMessage(data.message);
       setPortfolio(data.portfolio);
     } catch (err) {
@@ -136,7 +135,7 @@ function App() {
 
   async function sellStock() {
     try {
-      const data = await request(`/paper/sell/${ticker}?quantity=1`, { method: "POST" });
+      const data = await apiSellStock(ticker, 1);
       setMessage(data.message);
       setPortfolio(data.portfolio);
     } catch (err) {
@@ -148,7 +147,7 @@ function App() {
     try {
       setLoading(true);
       setSearchResults([]);
-      const data = await request(`/bot/run/${ticker}?quantity=1`, { method: "POST" });
+      const data = await apiRunBot(ticker, 1);
       setBotResult(data);
       setAnalysis(data.analysis);
       setPortfolio(data.portfolio);
