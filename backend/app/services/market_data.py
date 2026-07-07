@@ -37,11 +37,24 @@ class MarketDataService:
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    def get_price_history(self, ticker: str, period: str = "6mo"):
-        stock = yf.Ticker(ticker)
-        history = stock.history(period=period)
+    def get_price_history(self, ticker: str, period: str = "6mo", interval: str = "1d"):
+        clean_ticker = ticker.strip().upper()
+        if not clean_ticker:
+            raise ValueError("Ticker is required")
+
+        allowed_periods = {"1d", "5d", "1mo", "3mo", "6mo", "ytd", "1y", "2y", "5y"}
+        allowed_intervals = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo"}
+
+        if period not in allowed_periods:
+            raise ValueError(f"Unsupported chart period: {period}")
+
+        if interval not in allowed_intervals:
+            raise ValueError(f"Unsupported chart interval: {interval}")
+
+        stock = yf.Ticker(clean_ticker)
+        history = stock.history(period=period, interval=interval)
 
         if history.empty:
-            raise ValueError(f"No price history found for {ticker.upper()}")
+            raise ValueError(f"No price history found for {clean_ticker}")
 
         return history

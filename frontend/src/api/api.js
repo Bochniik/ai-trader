@@ -19,6 +19,11 @@ export function getQuote(ticker, options = {}) {
   return request(`/quote/${ticker}`, options);
 }
 
+export function getCandles(ticker, period = "6mo", interval = "1d") {
+  const params = new URLSearchParams({ period, interval });
+  return request(`/candles/${ticker}?${params.toString()}`);
+}
+
 export function getPortfolio() {
   return request("/paper/portfolio");
 }

@@ -91,14 +91,15 @@ def run_bot(ticker: str, quantity: int = 1):
 
 
 @router.get("/candles/{ticker}")
-def get_candles(ticker: str, period: str = "6mo"):
+def get_candles(ticker: str, period: str = "6mo", interval: str = "1d"):
     try:
-        history = market.get_price_history(ticker, period=period)
+        history = market.get_price_history(ticker, period=period, interval=interval)
 
         candles = []
         for date, row in history.iterrows():
+            candle_time = int(date.timestamp()) if interval != "1d" else date.strftime("%Y-%m-%d")
             candles.append({
-                "time": date.strftime("%Y-%m-%d"),
+                "time": candle_time,
                 "open": round(float(row["Open"]), 2),
                 "high": round(float(row["High"]), 2),
                 "low": round(float(row["Low"]), 2),
@@ -108,6 +109,7 @@ def get_candles(ticker: str, period: str = "6mo"):
         return {
             "ticker": ticker.upper(),
             "period": period,
+            "interval": interval,
             "candles": candles
         }
 
