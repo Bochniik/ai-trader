@@ -15,6 +15,10 @@ export function analyzeStock(ticker) {
   return request(`/analyze/${ticker}`);
 }
 
+export function getQuote(ticker, options = {}) {
+  return request(`/quote/${ticker}`, options);
+}
+
 export function getPortfolio() {
   return request("/paper/portfolio");
 }

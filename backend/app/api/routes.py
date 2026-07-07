@@ -22,6 +22,14 @@ def get_stock(ticker: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/quote/{ticker}")
+def get_quote(ticker: str):
+    try:
+        return market.get_quote(ticker)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/analyze/{ticker}")
 def analyze_stock(ticker: str):
     try:

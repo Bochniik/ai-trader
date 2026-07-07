@@ -9,6 +9,7 @@ import PortfolioPanel from "./components/PortfolioPanel";
 import AnalysisPanel from "./components/AnalysisPanel";
 import BotPanel from "./components/BotPanel";
 import SearchPanel from "./components/SearchPanel";
+import LiveQuoteCard from "./components/LiveQuoteCard";
 import {
   analyzeStock as apiAnalyzeStock,
   getPortfolio,
@@ -16,6 +17,7 @@ import {
   sellStock as apiSellStock,
   runBot as apiRunBot,
   searchStocks as apiSearchStocks,
+  getQuote as apiGetQuote,
 } from "./api/api";
 
 
@@ -29,6 +31,11 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [chartRefresh, setChartRefresh] = useState(0);
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
+  const [quoteDirection, setQuoteDirection] = useState(null);
+  const lastQuotePrice = useRef(null);
 
 
   function addToWatchlist() {
@@ -62,13 +69,14 @@ function App() {
   }
 
   async function selectSearchResult(symbol) {
-    setTicker(symbol);
+    const cleanSymbol = symbol.trim().toUpperCase();
+    setTicker(cleanSymbol);
     setSearchResults([]);
 
     try {
       setLoading(true);
       setMessage("");
-      const data = await apiSearchStocks(cleanValue);
+      const data = await apiAnalyzeStock(cleanSymbol);
       setAnalysis(data);
       setChartRefresh((old) => old + 1);
     } catch (err) {
@@ -126,7 +134,8 @@ function App() {
 
   async function buyStock() {
     try {
-      const data = await getPortfolio();
+      const cleanTicker = ticker.trim().toUpperCase();
+      const data = await apiBuyStock(cleanTicker, 1);
       setMessage(data.message);
       setPortfolio(data.portfolio);
     } catch (err) {
@@ -136,7 +145,8 @@ function App() {
 
   async function sellStock() {
     try {
-      const data = await apiSellStock(ticker, 1);
+      const cleanTicker = ticker.trim().toUpperCase();
+      const data = await apiSellStock(cleanTicker, 1);
       setMessage(data.message);
       setPortfolio(data.portfolio);
     } catch (err) {
@@ -165,6 +175,51 @@ function App() {
     analyzeStock();
     loadPortfolio();
   }, []);
+
+  useEffect(() => {
+    const cleanTicker = ticker.trim().toUpperCase();
+    if (!cleanTicker) {
+      setQuote(null);
+      setQuoteError("");
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function loadQuote() {
+      try {
+        setQuoteLoading(true);
+        setQuoteError("");
+        const data = await apiGetQuote(cleanTicker, { signal: controller.signal });
+
+        if (lastQuotePrice.current !== null && data.price !== null) {
+          if (data.price > lastQuotePrice.current) setQuoteDirection("up");
+          if (data.price < lastQuotePrice.current) setQuoteDirection("down");
+        }
+
+        lastQuotePrice.current = data.price;
+        setQuote(data);
+        window.setTimeout(() => setQuoteDirection(null), 900);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setQuoteError(err.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setQuoteLoading(false);
+        }
+      }
+    }
+
+    lastQuotePrice.current = null;
+    loadQuote();
+    const intervalId = window.setInterval(loadQuote, 30000);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(intervalId);
+    };
+  }, [ticker]);
 
   const positions = portfolio?.positions || {};
   const trades = portfolio?.trades || [];
@@ -217,6 +272,13 @@ function App() {
           <p>Confidence: {analysis?.confidence_score ?? "..."}%</p>
         </div>
       </section>
+
+      <LiveQuoteCard
+        quote={quote}
+        loading={quoteLoading}
+        error={quoteError}
+        direction={quoteDirection}
+      />
 
 <Watchlist
   watchlist={watchlist}
