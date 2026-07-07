@@ -5,8 +5,11 @@ export default function SearchPanel({
   ticker,
   loading,
   searchResults,
+  recentSearches = [],
   onSearchChange,
   onSelectResult,
+  onSelectRecent,
+  onClearRecent,
   onAnalyze,
   onBuy,
   onSell,
@@ -17,6 +20,7 @@ export default function SearchPanel({
   const [isOpen, setIsOpen] = useState(false);
 
   const hasResults = searchResults.length > 0;
+  const hasRecentSearches = recentSearches.length > 0;
 
   function handleChange(value) {
     setActiveIndex(0);
@@ -111,6 +115,30 @@ export default function SearchPanel({
           Analyze
         </button>
       </div>
+
+      {hasRecentSearches && (
+        <div className="recent-searches">
+          <div className="recent-searches-header">
+            <span>Recent searches</span>
+            <button type="button" className="clear-recent-btn" onClick={onClearRecent}>
+              Clear
+            </button>
+          </div>
+
+          <div className="recent-search-list">
+            {recentSearches.map((symbol) => (
+              <button
+                type="button"
+                className="recent-search-chip"
+                key={symbol}
+                onClick={() => onSelectRecent(symbol)}
+              >
+                {symbol}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="actions">
         <button onClick={onBuy}>Buy 1</button>

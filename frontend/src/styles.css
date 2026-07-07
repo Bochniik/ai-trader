@@ -120,6 +120,56 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.recent-searches {
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.recent-searches-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.clear-recent-btn {
+  background: transparent;
+  color: #94a3b8;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.clear-recent-btn:hover {
+  background: #1e293b;
+  color: #e5e7eb;
+}
+
+.recent-search-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recent-search-chip {
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  padding: 8px 10px;
+  border-radius: 999px;
+}
+
+.recent-search-chip:hover {
+  background: #334155;
+  color: white;
+}
+
 .actions {
   display: flex;
   gap: 10px;

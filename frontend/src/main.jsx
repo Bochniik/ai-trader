@@ -20,10 +20,23 @@ import {
   getQuote as apiGetQuote,
 } from "./api/api";
 
+const RECENT_SEARCHES_KEY = "orion_recent_searches";
+const MAX_RECENT_SEARCHES = 8;
+
+function getInitialRecentSearches() {
+  try {
+    const saved = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 function App() {
   const [ticker, setTicker] = useState("AAPL");
   const [searchResults, setSearchResults] = useState([]);
+  const [recentSearches, setRecentSearches] = useState(getInitialRecentSearches);
   const [watchlist, setWatchlist] = useState(["AAPL", "MSFT", "NVDA", "TSLA"]);
   const [analysis, setAnalysis] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
@@ -50,6 +63,27 @@ function App() {
     }
   }
 
+  function saveRecentSearch(symbol) {
+    const cleanSymbol = symbol.trim().toUpperCase();
+    if (!cleanSymbol) return;
+
+    setRecentSearches((current) => {
+      const next = [
+        cleanSymbol,
+        ...current.filter((item) => item !== cleanSymbol),
+      ].slice(0, MAX_RECENT_SEARCHES);
+
+      window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function clearRecentSearches() {
+    setRecentSearches([]);
+    window.localStorage.removeItem(RECENT_SEARCHES_KEY);
+    setMessage("Recent searches cleared");
+  }
+
   async function searchStocks(value) {
     const clean = value.toUpperCase();
     setTicker(clean);
@@ -72,6 +106,7 @@ function App() {
     const cleanSymbol = symbol.trim().toUpperCase();
     setTicker(cleanSymbol);
     setSearchResults([]);
+    saveRecentSearch(cleanSymbol);
 
     try {
       setLoading(true);
@@ -93,6 +128,7 @@ function App() {
   async function selectWatchlistStock(symbol) {
     setTicker(symbol);
     setSearchResults([]);
+    saveRecentSearch(symbol);
     try {
       setLoading(true);
       setMessage("");
@@ -113,6 +149,7 @@ function App() {
       setSearchResults([]);
       const cleanTicker = ticker.trim().toUpperCase() || "AAPL";
       setTicker(cleanTicker);
+      saveRecentSearch(cleanTicker);
       const data = await apiAnalyzeStock(cleanTicker);
       setAnalysis(data);
       setChartRefresh((old) => old + 1);
@@ -158,7 +195,9 @@ function App() {
     try {
       setLoading(true);
       setSearchResults([]);
-      const data = await apiRunBot(ticker, 1);
+      const cleanTicker = ticker.trim().toUpperCase();
+      const data = await apiRunBot(cleanTicker, 1);
+      saveRecentSearch(cleanTicker);
       setBotResult(data);
       setAnalysis(data.analysis);
       setPortfolio(data.portfolio);
@@ -245,8 +284,11 @@ function App() {
           ticker={ticker}
          loading={loading}
          searchResults={searchResults}
+         recentSearches={recentSearches}
          onSearchChange={searchStocks}
          onSelectResult={selectSearchResult}
+         onSelectRecent={selectSearchResult}
+         onClearRecent={clearRecentSearches}
          onAnalyze={analyzeStock}
           onBuy={buyStock}
           onSell={sellStock}
