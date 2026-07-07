@@ -28,7 +28,6 @@ function normalizeCandleTime(candle) {
     time: candle.time - localOffsetSeconds,
   };
 }
-
 function formatChartTime(time) {
   if (typeof time === "string") {
     const date = new Date(`${time}T00:00:00`);
@@ -46,6 +45,25 @@ function formatChartTime(time) {
     minute: "2-digit",
   });
 }
+
+function getIntervalSeconds(interval) {
+  if (interval === "1m") return 60;
+  if (interval === "5m") return 5 * 60;
+  if (interval === "15m") return 15 * 60;
+  if (interval === "30m") return 30 * 60;
+  if (interval === "60m") return 60 * 60;
+  return 60;
+}
+
+function getCurrentCandleTime(interval) {
+  const intervalSeconds = getIntervalSeconds(interval);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const localOffsetSeconds = new Date().getTimezoneOffset() * 60;
+  const localSeconds = nowSeconds - localOffsetSeconds;
+
+  return Math.floor(localSeconds / intervalSeconds) * intervalSeconds;
+}
+
 
 function CandleChart({ ticker, refreshKey }) {
   const chartContainerRef = useRef(null);
@@ -156,17 +174,30 @@ latestCandleRef.current =
 
         if (!price || !latestCandleRef.current || isCancelled) return;
 
-        const current = latestCandleRef.current;
+const current = latestCandleRef.current;
+const currentCandleTime = getCurrentCandleTime(selectedRange.interval);
 
-        const updatedCandle = {
-          ...current,
-          close: price,
-          high: Math.max(current.high, price),
-          low: Math.min(current.low, price),
-        };
+let updatedCandle;
 
-        latestCandleRef.current = updatedCandle;
-        seriesRef.current.update(updatedCandle);
+if (currentCandleTime > current.time) {
+  updatedCandle = {
+    time: currentCandleTime,
+    open: price,
+    high: price,
+    low: price,
+    close: price,
+  };
+} else {
+  updatedCandle = {
+    ...current,
+    close: price,
+    high: Math.max(current.high, price),
+    low: Math.min(current.low, price),
+  };
+}
+
+latestCandleRef.current = updatedCandle;
+seriesRef.current.update(updatedCandle);
 
         setLiveMessage(`Live updating every 5s · Last price $${price.toFixed(2)}`);
       } catch {
