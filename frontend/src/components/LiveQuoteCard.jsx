@@ -1,4 +1,4 @@
-import { Activity, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
+import { Activity, RefreshCw, Star, TrendingDown, TrendingUp } from "lucide-react";
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return "...";
@@ -22,7 +22,7 @@ function formatTime(value) {
   });
 }
 
-export default function LiveQuoteCard({ quote, loading, error, direction }) {
+export default function LiveQuoteCard({ quote, loading, error, direction, isFavorite, onToggleFavorite }) {
   const isUp = (quote?.change ?? 0) >= 0;
   const TrendIcon = isUp ? TrendingUp : TrendingDown;
   const directionClass = direction === "up" ? "flash-up" : direction === "down" ? "flash-down" : "";
@@ -38,9 +38,21 @@ export default function LiveQuoteCard({ quote, loading, error, direction }) {
           <h2>{quote?.ticker ?? "..."}</h2>
         </div>
 
-        <div className="quote-status">
-          <RefreshCw size={16} className={loading ? "spin" : ""} />
-          {loading ? "Refreshing" : `Updated ${formatTime(quote?.updated_at)}`}
+        <div className="quote-actions">
+          <button
+            type="button"
+            className={isFavorite ? "favorite-toggle active" : "favorite-toggle"}
+            onClick={onToggleFavorite}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Star size={18} fill={isFavorite ? "currentColor" : "none"} />
+            {isFavorite ? "Favorited" : "Favorite"}
+          </button>
+
+          <div className="quote-status">
+            <RefreshCw size={16} className={loading ? "spin" : ""} />
+            {loading ? "Refreshing" : `Updated ${formatTime(quote?.updated_at)}`}
+          </div>
         </div>
       </div>
 

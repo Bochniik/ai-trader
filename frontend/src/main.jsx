@@ -10,6 +10,7 @@ import AnalysisPanel from "./components/AnalysisPanel";
 import BotPanel from "./components/BotPanel";
 import SearchPanel from "./components/SearchPanel";
 import LiveQuoteCard from "./components/LiveQuoteCard";
+import FavoritesPanel from "./components/FavoritesPanel";
 import {
   analyzeStock as apiAnalyzeStock,
   getPortfolio,
@@ -21,11 +22,13 @@ import {
 } from "./api/api";
 
 const RECENT_SEARCHES_KEY = "orion_recent_searches";
+const FAVORITES_KEY = "orion_favorites";
 const MAX_RECENT_SEARCHES = 8;
+const MAX_FAVORITES = 12;
 
-function getInitialRecentSearches() {
+function getSavedList(key) {
   try {
-    const saved = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+    const saved = window.localStorage.getItem(key);
     const parsed = saved ? JSON.parse(saved) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -36,7 +39,8 @@ function getInitialRecentSearches() {
 function App() {
   const [ticker, setTicker] = useState("AAPL");
   const [searchResults, setSearchResults] = useState([]);
-  const [recentSearches, setRecentSearches] = useState(getInitialRecentSearches);
+  const [recentSearches, setRecentSearches] = useState(() => getSavedList(RECENT_SEARCHES_KEY));
+  const [favorites, setFavorites] = useState(() => getSavedList(FAVORITES_KEY));
   const [watchlist, setWatchlist] = useState(["AAPL", "MSFT", "NVDA", "TSLA"]);
   const [analysis, setAnalysis] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
@@ -50,6 +54,29 @@ function App() {
   const [quoteDirection, setQuoteDirection] = useState(null);
   const lastQuotePrice = useRef(null);
 
+  function saveFavorites(nextFavorites) {
+    setFavorites(nextFavorites);
+    window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(nextFavorites));
+  }
+
+  function toggleFavorite() {
+    const cleanTicker = ticker.trim().toUpperCase();
+    if (!cleanTicker) return;
+
+    if (favorites.includes(cleanTicker)) {
+      saveFavorites(favorites.filter((item) => item !== cleanTicker));
+      setMessage(`${cleanTicker} removed from favorites`);
+      return;
+    }
+
+    saveFavorites([cleanTicker, ...favorites].slice(0, MAX_FAVORITES));
+    setMessage(`${cleanTicker} added to favorites`);
+  }
+
+  function removeFavorite(symbol) {
+    saveFavorites(favorites.filter((item) => item !== symbol));
+    setMessage(`${symbol} removed from favorites`);
+  }
 
   function addToWatchlist() {
     const cleanTicker = ticker.trim().toUpperCase();
@@ -320,6 +347,14 @@ function App() {
         loading={quoteLoading}
         error={quoteError}
         direction={quoteDirection}
+        isFavorite={favorites.includes(ticker.trim().toUpperCase())}
+        onToggleFavorite={toggleFavorite}
+      />
+
+      <FavoritesPanel
+        favorites={favorites}
+        onSelectFavorite={selectSearchResult}
+        onRemoveFavorite={removeFavorite}
       />
 
 <Watchlist
