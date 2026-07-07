@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 
 app = FastAPI(
-    title="AI Trader",
+    title="Orion Trader",
     version="0.3.0",
     description="AI Trader backend with React dashboard support"
 )
@@ -26,6 +26,6 @@ app.include_router(router)
 def root():
     return {
         "status": "running",
-        "app": "AI Trader",
+        "app": "Orion Trader",
         "version": "0.3.0"
     }

@@ -134,3 +134,82 @@ def search_stocks(q: str):
         "query": q,
         "results": search_service.search(q)
     }
+
+@router.get("/orion-ai/{ticker}")
+def get_orion_ai_analysis(ticker: str):
+    ticker = ticker.upper()
+
+    try:
+        quote = market.get_quote(ticker)
+        news = market.get_news(ticker)
+    except Exception as exc:
+        print("ORION AI ERROR:", repr(exc))
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    change_percent = quote.get("changePercent") or 0
+    volume = quote.get("volume") or 0
+
+    reasons = []
+    risks = []
+    confidence = 55
+    outlook = "Neutral"
+
+    if change_percent > 1:
+        reasons.append("Positive price momentum today")
+        confidence += 12
+    elif change_percent < -1:
+        risks.append("Negative price movement today")
+        confidence += 8
+        outlook = "Bearish"
+    else:
+        reasons.append("Price action is relatively stable")
+
+    if volume:
+        reasons.append("Market activity is visible through current volume")
+
+    news_items = news.get("news", []) if isinstance(news, dict) else news
+    headlines = [item.get("title", "") for item in news_items[:5]]
+    
+    positive_words = ["beat", "growth", "upgrade", "strong", "surge", "record", "profit"]
+    negative_words = ["miss", "drop", "downgrade", "weak", "fall", "lawsuit", "risk"]
+
+    positive_hits = sum(
+        1 for headline in headlines for word in positive_words if word in headline.lower()
+    )
+    negative_hits = sum(
+        1 for headline in headlines for word in negative_words if word in headline.lower()
+    )
+
+    if positive_hits > negative_hits:
+        reasons.append("Recent headlines appear mostly positive")
+        confidence += 10
+        outlook = "Bullish"
+    elif negative_hits > positive_hits:
+        risks.append("Recent headlines contain negative signals")
+        confidence += 10
+        outlook = "Bearish"
+    else:
+        reasons.append("Recent news sentiment appears mixed or neutral")
+
+    if change_percent > 0 and outlook != "Bearish":
+        outlook = "Bullish"
+
+    if not risks:
+        risks.append("Market conditions can change quickly")
+    risks.append("This is not financial advice")
+
+    confidence = max(40, min(confidence, 90))
+
+    summary = (
+        f"Orion AI sees {ticker} as {outlook.lower()} right now. "
+        f"The view is based on current price movement, volume, and recent news headlines."
+    )
+
+    return {
+        "symbol": ticker,
+        "outlook": outlook,
+        "confidence": confidence,
+        "summary": summary,
+        "reasons": reasons[:4],
+        "risks": risks[:4],
+    }

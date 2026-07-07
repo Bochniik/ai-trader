@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Bot, Search, Wallet, TrendingUp, Activity, PlayCircle } from "lucide-react";
 import "./styles.css";
 import SignalBadge from "./components/SignalBadge";
+import OrionAiPanel from "./components/OrionAiPanel";
 import CandleChart from "./components/CandleChart";
 import Watchlist from "./components/Watchlist";
 import PortfolioPanel from "./components/PortfolioPanel";
@@ -320,7 +321,7 @@ function App() {
     <div className="app">
       <header>
         <div>
-          <h1>AI Trader</h1>
+          <h1>Orion Trader</h1>
           <p>Interactive paper-trading dashboard</p>
         </div>
         <div className="status">
@@ -404,10 +405,12 @@ function App() {
         error={newsError}
         onRefresh={() => loadNews(ticker)}
       />
+      
+      <OrionAiPanel ticker={ticker.trim().toUpperCase()} />
 
       <section className="grid main-grid">
         <AnalysisPanel analysis={analysis} />
-         <PortfolioPanel portfolio={portfolio} />
+        <PortfolioPanel portfolio={portfolio} />
       </section>
 
      <BotPanel botResult={botResult} />
