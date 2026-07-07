@@ -14,16 +14,27 @@ const CHART_RANGES = [
   { label: "3M", period: "3mo", interval: "1d" },
   { label: "6M", period: "6mo", interval: "1d" },
   { label: "YTD", period: "ytd", interval: "1d" },
-  { label: "1Y", period: "1y", interval: "1d" },
-  { label: "5Y", period: "5y", interval: "1wk" },
+  { label: "1Y", period: "1y", interval: "1wk" },
+  { label: "5Y", period: "5y", interval: "1mo" },
 ];
+
+function formatLocalTime(time) {
+  const date = new Date(time * 1000);
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 function CandleChart({ ticker, refreshKey }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
   const [chartMessage, setChartMessage] = useState("Loading chart...");
-  const [selectedRange, setSelectedRange] = useState(CHART_RANGES.find((range) => range.label === "6M"));
+  const [selectedRange, setSelectedRange] = useState(
+    CHART_RANGES.find((range) => range.label === "6M")
+  );
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -32,6 +43,9 @@ function CandleChart({ ticker, refreshKey }) {
 
     const chart = createChart(chartContainerRef.current, {
       height: 360,
+      localization: {
+        timeFormatter: formatLocalTime,
+      },
       layout: {
         background: { color: "#020617" },
         textColor: "#cbd5e1",
@@ -47,6 +61,7 @@ function CandleChart({ ticker, refreshKey }) {
         borderColor: "#334155",
         timeVisible: true,
         secondsVisible: false,
+        tickMarkFormatter: formatLocalTime,
       },
     });
 
@@ -81,7 +96,11 @@ function CandleChart({ ticker, refreshKey }) {
     async function loadCandles() {
       try {
         setChartMessage(`Loading ${selectedRange.label} chart...`);
-        const data = await getCandles(ticker, selectedRange.period, selectedRange.interval);
+        const data = await getCandles(
+          ticker,
+          selectedRange.period,
+          selectedRange.interval
+        );
 
         seriesRef.current.setData(data.candles);
         chartRef.current.timeScale().fitContent();
@@ -104,13 +123,18 @@ function CandleChart({ ticker, refreshKey }) {
             <button
               type="button"
               key={range.label}
-              className={range.label === selectedRange.label ? "range-btn active" : "range-btn"}
+              className={
+                range.label === selectedRange.label
+                  ? "range-btn active"
+                  : "range-btn"
+              }
               onClick={() => setSelectedRange(range)}
             >
               {range.label}
             </button>
           ))}
         </div>
+
         <span className="chart-interval-note">
           Interval: {selectedRange.interval}
         </span>
@@ -121,4 +145,5 @@ function CandleChart({ ticker, refreshKey }) {
     </div>
   );
 }
+
 export default CandleChart;
