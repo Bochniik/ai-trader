@@ -4,6 +4,7 @@ from app.services.market_data import MarketDataService
 from app.services.analysis_engine import AnalysisEngine
 from app.services.paper_trader import PaperTrader
 from app.services.bot_engine import BotEngine
+from datetime import timezone
 
 router = APIRouter()
 
@@ -97,7 +98,10 @@ def get_candles(ticker: str, period: str = "6mo", interval: str = "1d"):
 
         candles = []
         for date, row in history.iterrows():
-            candle_time = int(date.timestamp()) if interval != "1d" else date.strftime("%Y-%m-%d")
+            if interval in ["1d", "1wk", "1mo"]:
+                 candle_time = date.strftime("%Y-%m-%d")
+            else:
+                  candle_time = int(date.timestamp())
             candles.append({
                 "time": candle_time,
                 "open": round(float(row["Open"]), 2),

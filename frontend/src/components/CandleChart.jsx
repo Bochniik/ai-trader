@@ -1,24 +1,44 @@
 import { useEffect, useRef, useState } from "react";
 import { createChart, CandlestickSeries } from "lightweight-charts";
-import { getCandles } from "../api/api";
+import { getCandles, getQuote } from "../api/api";
 
 const CHART_RANGES = [
-  { label: "1m", period: "1d", interval: "1m" },
-  { label: "5m", period: "5d", interval: "5m" },
-  { label: "15m", period: "5d", interval: "15m" },
-  { label: "30m", period: "1mo", interval: "30m" },
-  { label: "1h", period: "1mo", interval: "60m" },
-  { label: "1D", period: "1d", interval: "5m" },
-  { label: "5D", period: "5d", interval: "15m" },
-  { label: "1M", period: "1mo", interval: "1d" },
-  { label: "3M", period: "3mo", interval: "1d" },
-  { label: "6M", period: "6mo", interval: "1d" },
-  { label: "YTD", period: "ytd", interval: "1d" },
-  { label: "1Y", period: "1y", interval: "1wk" },
-  { label: "5Y", period: "5y", interval: "1mo" },
+  { label: "1m", period: "1d", interval: "1m", live: true },
+  { label: "5m", period: "5d", interval: "5m", live: true },
+  { label: "15m", period: "5d", interval: "15m", live: true },
+  { label: "30m", period: "1mo", interval: "30m", live: true },
+  { label: "1h", period: "1mo", interval: "60m", live: true },
+  { label: "1D", period: "1d", interval: "5m", live: true },
+  { label: "5D", period: "5d", interval: "15m", live: true },
+  { label: "1M", period: "1mo", interval: "1d", live: false },
+  { label: "3M", period: "3mo", interval: "1d", live: false },
+  { label: "6M", period: "6mo", interval: "1d", live: false },
+  { label: "YTD", period: "ytd", interval: "1d", live: false },
+  { label: "1Y", period: "1y", interval: "1wk", live: false },
+  { label: "5Y", period: "5y", interval: "1mo", live: false },
 ];
 
-function formatLocalTime(time) {
+function normalizeCandleTime(candle) {
+  if (typeof candle.time === "string") return candle;
+
+  const localOffsetSeconds = new Date().getTimezoneOffset() * 60;
+
+  return {
+    ...candle,
+    time: candle.time - localOffsetSeconds,
+  };
+}
+
+function formatChartTime(time) {
+  if (typeof time === "string") {
+    const date = new Date(`${time}T00:00:00`);
+
+    return date.toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+    });
+  }
+
   const date = new Date(time * 1000);
 
   return date.toLocaleTimeString([], {
@@ -31,7 +51,10 @@ function CandleChart({ ticker, refreshKey }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
+  const latestCandleRef = useRef(null);
+
   const [chartMessage, setChartMessage] = useState("Loading chart...");
+  const [liveMessage, setLiveMessage] = useState("");
   const [selectedRange, setSelectedRange] = useState(
     CHART_RANGES.find((range) => range.label === "6M")
   );
@@ -43,9 +66,7 @@ function CandleChart({ ticker, refreshKey }) {
 
     const chart = createChart(chartContainerRef.current, {
       height: 360,
-      localization: {
-        timeFormatter: formatLocalTime,
-      },
+      formatChartTime,
       layout: {
         background: { color: "#020617" },
         textColor: "#cbd5e1",
@@ -54,14 +75,12 @@ function CandleChart({ ticker, refreshKey }) {
         vertLines: { color: "#1e293b" },
         horzLines: { color: "#1e293b" },
       },
-      rightPriceScale: {
-        borderColor: "#334155",
-      },
+      rightPriceScale: { borderColor: "#334155" },
       timeScale: {
         borderColor: "#334155",
         timeVisible: true,
         secondsVisible: false,
-        tickMarkFormatter: formatLocalTime,
+        formatChartTime,
       },
     });
 
@@ -96,13 +115,20 @@ function CandleChart({ ticker, refreshKey }) {
     async function loadCandles() {
       try {
         setChartMessage(`Loading ${selectedRange.label} chart...`);
+        setLiveMessage("");
+
         const data = await getCandles(
           ticker,
           selectedRange.period,
           selectedRange.interval
         );
 
-        seriesRef.current.setData(data.candles);
+const normalizedCandles = data.candles.map(normalizeCandleTime);
+
+seriesRef.current.setData(normalizedCandles);
+latestCandleRef.current =
+  normalizedCandles[normalizedCandles.length - 1] || null;
+
         chartRef.current.timeScale().fitContent();
         setChartMessage("");
       } catch (err) {
@@ -114,6 +140,48 @@ function CandleChart({ ticker, refreshKey }) {
       loadCandles();
     }
   }, [ticker, refreshKey, selectedRange]);
+
+  useEffect(() => {
+    if (!selectedRange.live || !ticker || !seriesRef.current) {
+      setLiveMessage("");
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function updateLiveCandle() {
+      try {
+        const quote = await getQuote(ticker);
+        const price = Number(quote.price);
+
+        if (!price || !latestCandleRef.current || isCancelled) return;
+
+        const current = latestCandleRef.current;
+
+        const updatedCandle = {
+          ...current,
+          close: price,
+          high: Math.max(current.high, price),
+          low: Math.min(current.low, price),
+        };
+
+        latestCandleRef.current = updatedCandle;
+        seriesRef.current.update(updatedCandle);
+
+        setLiveMessage(`Live updating every 5s · Last price $${price.toFixed(2)}`);
+      } catch {
+        setLiveMessage("Live update paused");
+      }
+    }
+
+    updateLiveCandle();
+    const intervalId = setInterval(updateLiveCandle, 5000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [ticker, selectedRange]);
 
   return (
     <div>
@@ -137,10 +205,13 @@ function CandleChart({ ticker, refreshKey }) {
 
         <span className="chart-interval-note">
           Interval: {selectedRange.interval}
+          {selectedRange.live ? " · Live" : ""}
         </span>
       </div>
 
       {chartMessage && <p className="chart-message">{chartMessage}</p>}
+      {!chartMessage && liveMessage && <p className="chart-message">{liveMessage}</p>}
+
       <div ref={chartContainerRef} className="chart-box" />
     </div>
   );
