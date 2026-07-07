@@ -15,10 +15,6 @@ export function analyzeStock(ticker) {
   return request(`/analyze/${ticker}`);
 }
 
-export function getQuote(ticker, options = {}) {
-  return request(`/quote/${ticker}`, options);
-}
-
 export function getCandles(ticker, period = "6mo", interval = "1d") {
   const params = new URLSearchParams({ period, interval });
   return request(`/candles/${ticker}?${params.toString()}`);
@@ -48,4 +44,14 @@ export function runBot(ticker, quantity = 1) {
 
 export function searchStocks(query) {
   return request(`/search?q=${encodeURIComponent(query)}`);
+}
+
+export async function getQuote(ticker) {
+  const response = await fetch(`${API_BASE_URL}/quote/${ticker}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch quote for ${ticker}`);
+  }
+
+  return response.json();
 }

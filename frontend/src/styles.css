@@ -425,6 +425,99 @@ th, td {
   color: #94a3b8;
   font-size: 14px;
 }
+.watchlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.watchlist-refresh {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.watchlist-error {
+  color: #fca5a5;
+  margin-bottom: 12px;
+}
+
+.watchlist-table {
+  display: grid;
+  gap: 8px;
+}
+
+.watchlist-row {
+  display: grid;
+  grid-template-columns: minmax(68px, 0.9fr) minmax(92px, 1fr) minmax(86px, 1fr) minmax(78px, 0.9fr) auto;
+  align-items: center;
+  gap: 10px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.watchlist-row-head {
+  background: transparent;
+  border: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.watchlist-row button {
+  min-width: 0;
+}
+
+.watch-price,
+.watch-change,
+.watch-volume {
+  background: transparent;
+  border: 0;
+  color: #e5e7eb;
+  padding: 0;
+  text-align: left;
+  font-weight: 800;
+}
+
+.watch-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.watch-change.positive {
+  color: #22c55e;
+}
+
+.watch-change.negative {
+  color: #ef4444;
+}
+
+.watch-volume {
+  color: #94a3b8;
+}
+
+@media (max-width: 760px) {
+  .watchlist-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .watchlist-row-head {
+    display: none;
+  }
+}
+
 .live-quote-card {
   margin-bottom: 18px;
   transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
