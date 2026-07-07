@@ -1,34 +1,46 @@
-# AI Trader v0.5
+# Orion Trader
 
-This version adds a frontend watchlist.
+An AI-powered paper trading platform.
 
-## Added
+## Stack
 
-- Watchlist section
-- Add current ticker to watchlist
-- Remove ticker from watchlist
-- Click watchlist ticker to load analysis and chart
+Frontend
+- React
+- Vite
 
-## Run backend
+Backend
+- FastAPI
 
-```powershell
-cd ai-trader-v0.5/backend
-pip install -r requirements.txt
+Charts
+- lightweight-charts
+
+Data
+- Yahoo Finance
+
+---
+
+## Run Backend
+
+cd backend
+
 python -m uvicorn app.main:app --reload
-```
 
-## Run frontend
+---
 
-```powershell
-cd ai-trader-v0.5/frontend
-npm.cmd install
-npm.cmd run dev
-```
+## Run Frontend
 
-Open:
+cd frontend
 
-```text
-http://127.0.0.1:5173
-```
+npm install
 
-Educational/paper-trading project only. Not financial advice.
+npm run dev
+
+---
+
+## Git
+
+git add .
+
+git commit -m "..."
+
+git push
