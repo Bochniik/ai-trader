@@ -58,3 +58,38 @@ class MarketDataService:
             raise ValueError(f"No price history found for {clean_ticker}")
 
         return history
+    def get_news(self, ticker: str, limit: int = 8):
+        clean_ticker = ticker.strip().upper()
+        if not clean_ticker:
+            raise ValueError("Ticker is required")
+
+        stock = yf.Ticker(clean_ticker)
+        raw_news = stock.news or []
+        articles = []
+
+        for item in raw_news[:limit]:
+            content = item.get("content", item) if isinstance(item, dict) else {}
+            title = content.get("title") or item.get("title")
+            link = content.get("canonicalUrl", {}).get("url") or content.get("clickThroughUrl", {}).get("url") or item.get("link")
+            publisher = content.get("provider", {}).get("displayName") or item.get("publisher")
+            published_at = content.get("pubDate") or item.get("providerPublishTime")
+
+            if isinstance(published_at, str):
+                try:
+                    published_at = int(datetime.fromisoformat(published_at.replace("Z", "+00:00")).timestamp())
+                except ValueError:
+                    published_at = None
+
+            if title and link:
+                articles.append({
+                    "title": title,
+                    "publisher": publisher,
+                    "link": link,
+                    "published_at": published_at,
+                })
+
+        return {
+            "ticker": clean_ticker,
+            "news": articles,
+        }
+

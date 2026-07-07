@@ -20,6 +20,10 @@ export function getCandles(ticker, period = "6mo", interval = "1d") {
   return request(`/candles/${ticker}?${params.toString()}`);
 }
 
+export function getNews(ticker) {
+  return request(`/news/${ticker}`);
+}
+
 export function getPortfolio() {
   return request("/paper/portfolio");
 }

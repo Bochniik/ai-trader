@@ -116,6 +116,14 @@ def get_candles(ticker: str, period: str = "6mo", interval: str = "1d"):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
         
+
+@router.get("/news/{ticker}")
+def get_news(ticker: str):
+    try:
+        return market.get_news(ticker)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.get("/search")
 def search_stocks(q: str):
     return {

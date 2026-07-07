@@ -11,6 +11,7 @@ import BotPanel from "./components/BotPanel";
 import SearchPanel from "./components/SearchPanel";
 import LiveQuoteCard from "./components/LiveQuoteCard";
 import FavoritesPanel from "./components/FavoritesPanel";
+import StockNewsPanel from "./components/StockNewsPanel";
 import {
   analyzeStock as apiAnalyzeStock,
   getPortfolio,
@@ -19,6 +20,7 @@ import {
   runBot as apiRunBot,
   searchStocks as apiSearchStocks,
   getQuote as apiGetQuote,
+  getNews as apiGetNews,
 } from "./api/api";
 
 const RECENT_SEARCHES_KEY = "orion_recent_searches";
@@ -52,6 +54,9 @@ function App() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState("");
   const [quoteDirection, setQuoteDirection] = useState(null);
+  const [news, setNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsError, setNewsError] = useState("");
   const lastQuotePrice = useRef(null);
 
   function saveFavorites(nextFavorites) {
@@ -187,6 +192,23 @@ function App() {
     }
   }
 
+  async function loadNews(symbol = ticker) {
+    const cleanTicker = symbol.trim().toUpperCase();
+    if (!cleanTicker) return;
+
+    try {
+      setNewsLoading(true);
+      setNewsError("");
+      const data = await apiGetNews(cleanTicker);
+      setNews(data.news || []);
+    } catch (err) {
+      setNews([]);
+      setNewsError(err.message);
+    } finally {
+      setNewsLoading(false);
+    }
+  }
+
   async function loadPortfolio() {
     try {
       const data = await getPortfolio();
@@ -241,6 +263,10 @@ function App() {
     analyzeStock();
     loadPortfolio();
   }, []);
+
+  useEffect(() => {
+    loadNews(ticker);
+  }, [ticker]);
 
   useEffect(() => {
     const cleanTicker = ticker.trim().toUpperCase();
@@ -370,6 +396,14 @@ function App() {
         </div>
         <CandleChart ticker={ticker} refreshKey={chartRefresh} />
       </section>
+
+      <StockNewsPanel
+        ticker={ticker.trim().toUpperCase()}
+        news={news}
+        loading={newsLoading}
+        error={newsError}
+        onRefresh={() => loadNews(ticker)}
+      />
 
       <section className="grid main-grid">
         <AnalysisPanel analysis={analysis} />
