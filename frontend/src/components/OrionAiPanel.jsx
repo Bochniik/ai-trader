@@ -4,7 +4,8 @@ import {
   getOrionAiAnalysis,
   askOrion,
   compareStocks,
-  rankWatchlistWithOrion, 
+  rankWatchlistWithOrion,
+  reviewPortfolioWithOrion,
 } from "../api/api";
 
 function formatOrionAnswer(text) {
@@ -27,6 +28,8 @@ export default function OrionAiPanel({ ticker, watchlist }) {
   const [chatHistory, setChatHistory] = useState([]);
 
   const [watchlistLoading, setWatchlistLoading] = useState(false);
+
+  const [portfolioReviewLoading, setPortfolioReviewLoading] = useState(false);
 
 function detectComparison(question) {
   const ignoredWords = new Set([
@@ -82,6 +85,27 @@ function detectComparison(question) {
     setWatchlistLoading(false);
   }
  }
+
+async function reviewPortfolioRisk() {
+  try {
+    setPortfolioReviewLoading(true);
+    setMessage("");
+
+    const data = await reviewPortfolioWithOrion();
+
+    setChatHistory((current) => [
+      ...current,
+      {
+        question: data.question,
+        answer: data.answer,
+      },
+    ]);
+  } catch (err) {
+    setMessage(err.message);
+  } finally {
+    setPortfolioReviewLoading(false);
+  }
+}
 
   async function submitQuestion(event) {
     event.preventDefault();
@@ -209,6 +233,15 @@ function detectComparison(question) {
          disabled={watchlistLoading}
        >
          {watchlistLoading ? "Ranking..." : "Rank my watchlist"}
+       </button>
+
+       <button
+          type="button"
+          className="ghost-btn"
+          onClick={reviewPortfolioRisk}
+          disabled={portfolioReviewLoading}
+        >
+         {portfolioReviewLoading ? "Reviewing..." : "Review portfolio risk"}
        </button>
 
 {chatHistory.length > 0 && (

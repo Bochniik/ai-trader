@@ -107,3 +107,9 @@ export function addWatchlistTicker(ticker) {
 export function removeWatchlistTicker(ticker) {
   return request(`/watchlist/${ticker}`, { method: "DELETE" });
 }
+
+export function reviewPortfolioWithOrion() {
+  return request("/orion-ai/portfolio-review", {
+    method: "POST",
+  });
+}

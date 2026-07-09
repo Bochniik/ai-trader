@@ -204,3 +204,37 @@ Mention risk.
         "tickers": tickers,
         "answer": response.output_text,
     }
+
+def review_portfolio(portfolio, question=None):
+    response = client.responses.create(
+        model="gpt-5.5",
+        instructions=SYSTEM_INSTRUCTIONS,
+        input=f"""
+You are Orion AI inside Orion Trader.
+
+Review the user's paper trading portfolio.
+
+User question:
+{question or "Review my portfolio risk."}
+
+Portfolio:
+{json.dumps(portfolio, indent=2)}
+
+Analyze:
+- cash level
+- open positions
+- concentration risk
+- trade activity
+- possible weaknesses
+- practical next steps
+
+Do not guarantee profits.
+Mention risk.
+Give clear, practical feedback.
+""",
+    )
+
+    return {
+        "question": question or "Review my portfolio risk.",
+        "answer": response.output_text,
+    }
