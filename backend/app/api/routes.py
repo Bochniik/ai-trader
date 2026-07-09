@@ -6,8 +6,8 @@ from app.services.paper_trader import PaperTrader
 from app.services.bot_engine import BotEngine
 from datetime import timezone
 from pydantic import BaseModel
-from app.services.orion_ai_service import analyze_with_llm, ask_orion
-from app.services.orion_ai_service import analyze_with_llm, ask_orion, compare_stocks
+from app.services.orion_ai_service import analyze_with_llm, ask_orion, compare_stocks, rank_watchlist
+from app.services.watchlist import Watchlist
 
 router = APIRouter()
 
@@ -15,6 +15,9 @@ class OrionChatRequest(BaseModel):
     ticker: str
     question: str
     history: list[dict] = []
+
+class OrionWatchlistRequest(BaseModel):
+    tickers: list[str]
 
 class OrionCompareRequest(BaseModel):
     primary: str
@@ -26,6 +29,7 @@ analysis = AnalysisEngine()
 search_service = StockSearchService()
 paper = PaperTrader(starting_cash=10000)
 bot = BotEngine(market=market, analysis=analysis, trader=paper)
+watchlist = Watchlist()
 
 
 @router.get("/stock/{ticker}")
@@ -261,4 +265,39 @@ def compare_with_orion(request: OrionCompareRequest):
         )
     except Exception as exc:
         print("ORION COMPARE ERROR:", repr(exc))
+        raise HTTPException(status_code=400, detail=str(exc))
+
+@router.get("/watchlist")
+def get_watchlist():
+    return {
+        "tickers": watchlist.get()
+    }
+
+
+@router.post("/watchlist/{ticker}")
+def add_watchlist(ticker: str):
+    return {
+        "tickers": watchlist.add(ticker)
+    }
+
+
+@router.delete("/watchlist/{ticker}")
+def remove_watchlist(ticker: str):
+    return {
+        "tickers": watchlist.remove(ticker)
+    }
+
+@router.post("/orion-ai/watchlist")
+def rank_watchlist_with_orion(request: OrionWatchlistRequest):
+    tickers = [ticker.upper() for ticker in request.tickers if ticker.strip()]
+
+    try:
+        contexts = [build_orion_context(ticker) for ticker in tickers]
+
+        return rank_watchlist(
+            tickers=tickers,
+            contexts=contexts,
+        )
+    except Exception as exc:
+        print("ORION WATCHLIST ERROR:", repr(exc))
         raise HTTPException(status_code=400, detail=str(exc))

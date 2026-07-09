@@ -165,3 +165,42 @@ Return a clear practical answer.
         "question": question,
         "answer": response.output_text,
     }
+
+def rank_watchlist(tickers, contexts, question=None):
+    response = client.responses.create(
+        model="gpt-5.5",
+        instructions=SYSTEM_INSTRUCTIONS,
+        input=f"""
+You are Orion AI inside Orion Trader.
+
+Rank the user's watchlist from strongest to weakest setup today.
+
+Use:
+- quote data
+- technical indicators
+- volume
+- recent news
+- risk
+
+User question:
+{question or "Which stock in my watchlist looks strongest today?"}
+
+Watchlist contexts:
+{json.dumps(contexts, indent=2)}
+
+Return a clear ranked list with:
+- rank
+- ticker
+- short reasoning
+- main risk
+- best overall opportunity
+
+Do not guarantee profits.
+Mention risk.
+""",
+    )
+
+    return {
+        "tickers": tickers,
+        "answer": response.output_text,
+    }

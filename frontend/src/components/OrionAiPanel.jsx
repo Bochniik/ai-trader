@@ -4,6 +4,7 @@ import {
   getOrionAiAnalysis,
   askOrion,
   compareStocks,
+  rankWatchlistWithOrion, 
 } from "../api/api";
 
 function formatOrionAnswer(text) {
@@ -14,9 +15,9 @@ function formatOrionAnswer(text) {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
-}
+} 
 
-export default function OrionAiPanel({ ticker }) {
+export default function OrionAiPanel({ ticker, watchlist }) {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -24,6 +25,8 @@ export default function OrionAiPanel({ ticker }) {
   const [question, setQuestion] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
+
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
 function detectComparison(question) {
   const ignoredWords = new Set([
@@ -58,6 +61,27 @@ function detectComparison(question) {
     secondary: tickers[1],
   };
 }
+
+ async function rankWatchlist() {
+  try {
+    setWatchlistLoading(true);
+    setMessage("");
+
+    const data = await rankWatchlistWithOrion(watchlist);
+
+    setChatHistory((current) => [
+      ...current,
+      {
+        question: "Which stock in my watchlist looks strongest today?",
+        answer: data.answer,
+      },
+    ]);
+  } catch (err) {
+    setMessage(err.message);
+  } finally {
+    setWatchlistLoading(false);
+  }
+ }
 
   async function submitQuestion(event) {
     event.preventDefault();
@@ -177,6 +201,15 @@ function detectComparison(question) {
           {chatLoading ? "Thinking..." : "Ask"}
         </button>
       </form>
+
+        <button
+          type="button"
+         className="ghost-btn"
+         onClick={rankWatchlist}
+         disabled={watchlistLoading}
+       >
+         {watchlistLoading ? "Ranking..." : "Rank my watchlist"}
+       </button>
 
 {chatHistory.length > 0 && (
   <div className="orion-chat-history">

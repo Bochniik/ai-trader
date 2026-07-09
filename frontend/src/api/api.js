@@ -85,3 +85,25 @@ export function compareStocks(primary, secondary, question = "") {
     }),
   });
 }
+
+export function rankWatchlistWithOrion(tickers) {
+  return request("/orion-ai/watchlist", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ tickers }),
+  });
+}
+
+export function getWatchlist() {
+  return request("/watchlist");
+}
+
+export function addWatchlistTicker(ticker) {
+  return request(`/watchlist/${ticker}`, { method: "POST" });
+}
+
+export function removeWatchlistTicker(ticker) {
+  return request(`/watchlist/${ticker}`, { method: "DELETE" });
+}

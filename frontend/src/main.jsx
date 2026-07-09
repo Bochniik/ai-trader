@@ -22,6 +22,9 @@ import {
   searchStocks as apiSearchStocks,
   getQuote as apiGetQuote,
   getNews as apiGetNews,
+  getWatchlist,
+  addWatchlistTicker,
+  removeWatchlistTicker,
 } from "./api/api";
 
 const RECENT_SEARCHES_KEY = "orion_recent_searches";
@@ -79,22 +82,28 @@ function App() {
     setMessage(`${cleanTicker} added to favorites`);
   }
 
-  function removeFavorite(symbol) {
-    saveFavorites(favorites.filter((item) => item !== symbol));
-    setMessage(`${symbol} removed from favorites`);
+  async function removeFromWatchlist(symbol) {
+  try {
+    const data = await removeWatchlistTicker(symbol);
+    setWatchlist(data.tickers || []);
+    setMessage(`${symbol} removed from watchlist`);
+  } catch (err) {
+    setMessage(err.message);
   }
+}
 
-  function addToWatchlist() {
-    const cleanTicker = ticker.trim().toUpperCase();
-    if (!cleanTicker) return;
+  async function addToWatchlist() {
+  const cleanTicker = ticker.trim().toUpperCase();
+  if (!cleanTicker) return;
 
-    if (!watchlist.includes(cleanTicker)) {
-      setWatchlist([...watchlist, cleanTicker]);
-      setMessage(`${cleanTicker} added to watchlist`);
-    } else {
-      setMessage(`${cleanTicker} is already in your watchlist`);
-    }
+  try {
+    const data = await addWatchlistTicker(cleanTicker);
+    setWatchlist(data.tickers || []);
+    setMessage(`${cleanTicker} added to watchlist`);
+  } catch (err) {
+    setMessage(err.message);
   }
+}
 
   function saveRecentSearch(symbol) {
     const cleanSymbol = symbol.trim().toUpperCase();
@@ -263,6 +272,16 @@ function App() {
   useEffect(() => {
     analyzeStock();
     loadPortfolio();
+    async function loadWatchlist() {
+  try {
+    const data = await getWatchlist();
+    setWatchlist(data.tickers || []);
+  } catch (err) {
+    setMessage(err.message);
+  }
+}
+
+loadWatchlist();
   }, []);
 
   useEffect(() => {
@@ -381,7 +400,7 @@ function App() {
       <FavoritesPanel
         favorites={favorites}
         onSelectFavorite={selectSearchResult}
-        onRemoveFavorite={removeFavorite}
+        onRemove={removeFromWatchlist}
       />
 
 <Watchlist
@@ -406,7 +425,10 @@ function App() {
         onRefresh={() => loadNews(ticker)}
       />
       
-     <OrionAiPanel ticker={ticker.trim().toUpperCase()} />
+     <OrionAiPanel
+       ticker={ticker.trim().toUpperCase()}
+       watchlist={watchlist}
+    />
 
       <section className="grid main-grid">
         <AnalysisPanel analysis={analysis} />
