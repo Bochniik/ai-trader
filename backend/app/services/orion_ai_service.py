@@ -89,8 +89,9 @@ Stock context:
             "risks": ["AI output should be reviewed before making decisions."],
         }
 
-def ask_orion(ticker, quote, analysis, news_items, question):
+def ask_orion(ticker, quote, analysis, news_items, question, history=None):
     context = build_context(ticker, quote, analysis, news_items)
+    history = history or []
 
     try:
         response = client.responses.create(
@@ -98,6 +99,9 @@ def ask_orion(ticker, quote, analysis, news_items, question):
             instructions=SYSTEM_INSTRUCTIONS,
             input=f"""
 You are answering a user question inside Orion Trader.
+
+Previous conversation:
+{json.dumps(history[-6:], indent=2)}
 
 User question:
 {question}

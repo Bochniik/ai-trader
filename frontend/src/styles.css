@@ -829,3 +829,9 @@ th, td {
   line-height: 1.55;
   color: #e5e7eb;
 }
+
+.orion-chat-history {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}

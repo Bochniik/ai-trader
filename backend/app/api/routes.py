@@ -13,6 +13,7 @@ router = APIRouter()
 class OrionChatRequest(BaseModel):
     ticker: str
     question: str
+    history: list[dict] = []
 
 market = MarketDataService()
 analysis = AnalysisEngine()
@@ -203,6 +204,7 @@ def chat_with_orion(request: OrionChatRequest):
             analysis=technical_analysis,
             news_items=news_items,
             question=request.question,
+            history=request.history,
         )
     except Exception as exc:
         print("ORION CHAT ERROR:", repr(exc))

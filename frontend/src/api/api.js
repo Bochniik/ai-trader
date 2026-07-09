@@ -50,38 +50,24 @@ export function searchStocks(query) {
   return request(`/search?q=${encodeURIComponent(query)}`);
 }
 
-export async function getQuote(ticker) {
-  const response = await fetch(`${API_BASE_URL}/quote/${ticker}`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch quote for ${ticker}`);
-  }
-
-  return response.json();
+export function getQuote(ticker) {
+  return request(`/quote/${ticker}`);
 }
 
-export async function getOrionAiAnalysis(ticker) {
-  const response = await fetch(`${API_BASE_URL}/orion-ai/${ticker}`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Orion AI analysis for ${ticker}`);
-  }
-
-  return response.json();
+export function getOrionAiAnalysis(ticker) {
+  return request(`/orion-ai/${ticker}`);
 }
 
-export async function askOrion(ticker, question) {
-  const response = await fetch(`${API_BASE_URL}/orion-ai/chat`, {
+export function askOrion(ticker, question, history = []) {
+  return request("/orion-ai/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ ticker, question }),
+    body: JSON.stringify({
+      ticker,
+      question,
+      history,
+    }),
   });
-
-  if (!response.ok) {
-    throw new Error("Failed to ask Orion AI");
-  }
-
-  return response.json();
 }

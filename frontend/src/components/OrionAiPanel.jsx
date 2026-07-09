@@ -18,8 +18,8 @@ export default function OrionAiPanel({ ticker }) {
   const [message, setMessage] = useState("");
 
   const [question, setQuestion] = useState("");
-  const [chatAnswer, setChatAnswer] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]);
 
   async function submitQuestion(event) {
     event.preventDefault();
@@ -29,8 +29,16 @@ export default function OrionAiPanel({ ticker }) {
     try {
       setChatLoading(true);
       setMessage("");
-      const data = await askOrion(ticker, question.trim());
-      setChatAnswer(data);
+      const data = await askOrion(ticker, question.trim(), chatHistory);
+
+      setChatHistory((current) => [
+        ...current,
+        {
+          question: data.question,
+          answer: data.answer,
+        },
+      ]);
+
       setQuestion("");
     } catch (err) {
       setMessage(err.message);
@@ -116,17 +124,24 @@ export default function OrionAiPanel({ ticker }) {
         </button>
       </form>
 
-      {chatAnswer && (
-        <div className="orion-chat-answer">
-          <strong>You asked:</strong>
-          <p>{chatAnswer.question}</p>
+      {chatHistory.length > 0 && (
+        <div className="orion-chat-history">
+          {chatHistory.map((item, chatIndex) => (
+            <div
+              className="orion-chat-answer"
+              key={`${item.question}-${chatIndex}`}
+            >
+              <strong>You asked:</strong>
+              <p>{item.question}</p>
 
-          <strong>Orion says:</strong>
-          <div className="orion-answer-block">
-            {formatOrionAnswer(chatAnswer.answer).map((line, index) => (
-              <p key={index}>{line}</p>
-            ))}
-          </div>
+              <strong>Orion says:</strong>
+              <div className="orion-answer-block">
+                {formatOrionAnswer(item.answer).map((line, lineIndex) => (
+                  <p key={`${chatIndex}-${lineIndex}`}>{line}</p>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>
