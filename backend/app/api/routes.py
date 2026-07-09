@@ -5,8 +5,14 @@ from app.services.analysis_engine import AnalysisEngine
 from app.services.paper_trader import PaperTrader
 from app.services.bot_engine import BotEngine
 from datetime import timezone
+from pydantic import BaseModel
+from app.services.orion_ai_service import analyze_with_llm, ask_orion
 
 router = APIRouter()
+
+class OrionChatRequest(BaseModel):
+    ticker: str
+    question: str
 
 market = MarketDataService()
 analysis = AnalysisEngine()
@@ -134,3 +140,70 @@ def search_stocks(q: str):
         "query": q,
         "results": search_service.search(q)
     }
+
+@router.get("/orion-ai/{ticker}")
+def get_orion_ai_analysis(ticker: str):
+    ticker = ticker.upper()
+
+    try:
+        quote = market.get_quote(ticker)
+        news_response = market.get_news(ticker)
+        history = market.get_price_history(ticker)
+        technical_analysis = analysis.analyze(ticker, history)
+    except Exception as exc:
+        print("ORION AI DATA ERROR:", repr(exc))
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    news_items = (
+        news_response.get("news", [])
+        if isinstance(news_response, dict)
+        else news_response
+    )
+
+    try:
+        return analyze_with_llm(ticker, quote, technical_analysis, news_items)
+    except Exception as exc:
+        print("ORION LLM ERROR:", repr(exc))
+
+        return {
+            "symbol": ticker,
+            "outlook": "Neutral",
+            "confidence": 50,
+            "summary": "Orion AI could not reach the language model, so this fallback response is based on available app data only.",
+            "reasons": [
+                "Live quote data is available",
+                "Technical analysis is available",
+                "Recent news headlines are available",
+            ],
+            "risks": [
+                "LLM analysis is currently unavailable",
+                "This is not financial advice",
+            ],
+        }
+
+@router.post("/orion-ai/chat")
+def chat_with_orion(request: OrionChatRequest):
+    ticker = request.ticker.upper()
+
+    try:
+        quote = market.get_quote(ticker)
+        news_response = market.get_news(ticker)
+        history = market.get_price_history(ticker)
+        technical_analysis = analysis.analyze(ticker, history)
+
+        news_items = (
+            news_response.get("news", [])
+            if isinstance(news_response, dict)
+            else news_response
+        )
+
+        return ask_orion(
+            ticker=ticker,
+            quote=quote,
+            analysis=technical_analysis,
+            news_items=news_items,
+            question=request.question,
+        )
+    except Exception as exc:
+        print("ORION CHAT ERROR:", repr(exc))
+        raise HTTPException(status_code=400, detail=str(exc))

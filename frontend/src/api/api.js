@@ -59,3 +59,29 @@ export async function getQuote(ticker) {
 
   return response.json();
 }
+
+export async function getOrionAiAnalysis(ticker) {
+  const response = await fetch(`${API_BASE_URL}/orion-ai/${ticker}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Orion AI analysis for ${ticker}`);
+  }
+
+  return response.json();
+}
+
+export async function askOrion(ticker, question) {
+  const response = await fetch(`${API_BASE_URL}/orion-ai/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ticker, question }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to ask Orion AI");
+  }
+
+  return response.json();
+}

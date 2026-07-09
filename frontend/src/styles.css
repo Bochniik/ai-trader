@@ -810,3 +810,22 @@ th, td {
   color: #94a3b8;
 }
 
+.orion-chat-answer {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #334155;
+  border-radius: 18px;
+  background: #020617;
+}
+
+.orion-chat-answer strong {
+  display: block;
+  margin-top: 10px;
+  color: #bfdbfe;
+}
+
+.orion-answer-block p {
+  margin: 10px 0;
+  line-height: 1.55;
+  color: #e5e7eb;
+}

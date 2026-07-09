@@ -5,6 +5,7 @@ import "./styles.css";
 import SignalBadge from "./components/SignalBadge";
 import CandleChart from "./components/CandleChart";
 import Watchlist from "./components/Watchlist";
+import OrionAiPanel from "./components/OrionAiPanel";
 import PortfolioPanel from "./components/PortfolioPanel";
 import AnalysisPanel from "./components/AnalysisPanel";
 import BotPanel from "./components/BotPanel";
@@ -404,6 +405,8 @@ function App() {
         error={newsError}
         onRefresh={() => loadNews(ticker)}
       />
+      
+     <OrionAiPanel ticker={ticker.trim().toUpperCase()} />
 
       <section className="grid main-grid">
         <AnalysisPanel analysis={analysis} />
