@@ -71,3 +71,17 @@ export function askOrion(ticker, question, history = []) {
     }),
   });
 }
+
+export function compareStocks(primary, secondary, question = "") {
+  return request("/orion-ai/compare", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      primary,
+      secondary,
+      question,
+    }),
+  });
+}

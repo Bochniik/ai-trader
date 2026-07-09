@@ -114,6 +114,7 @@ Stock context:
 {json.dumps(context, indent=2)}
 
 Answer clearly and practically.
+If the user asks to compare two stocks, compare them clearly across technicals, price momentum, volume, news, risk, and which setup looks stronger.
 Do not guarantee profits.
 Mention risk where relevant.
 """,
@@ -124,6 +125,43 @@ Mention risk where relevant.
 
     return {
         "symbol": ticker,
+        "question": question,
+        "answer": response.output_text,
+    }
+
+def compare_stocks(primary_symbol, secondary_symbol, primary_context, secondary_context, question):
+    response = client.responses.create(
+        model="gpt-5.5",
+        instructions=SYSTEM_INSTRUCTIONS,
+        input=f"""
+You are comparing two stocks inside Orion Trader.
+
+User question:
+{question}
+
+Primary stock:
+{json.dumps(primary_context, indent=2)}
+
+Secondary stock:
+{json.dumps(secondary_context, indent=2)}
+
+Compare them across:
+- price momentum
+- technical indicators
+- volume
+- recent news
+- risk
+- which setup looks stronger
+
+Do not guarantee profits.
+Mention risk.
+Return a clear practical answer.
+""",
+    )
+
+    return {
+        "primary": primary_symbol,
+        "secondary": secondary_symbol,
         "question": question,
         "answer": response.output_text,
     }

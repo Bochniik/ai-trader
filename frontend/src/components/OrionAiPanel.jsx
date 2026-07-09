@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Bot, RefreshCw } from "lucide-react";
-import { getOrionAiAnalysis, askOrion } from "../api/api";
+import {
+  getOrionAiAnalysis,
+  askOrion,
+  compareStocks,
+} from "../api/api";
 
 function formatOrionAnswer(text) {
   if (!text) return [];
@@ -21,6 +25,40 @@ export default function OrionAiPanel({ ticker }) {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
 
+function detectComparison(question) {
+  const ignoredWords = new Set([
+    "AND",
+    "OR",
+    "THE",
+    "WITH",
+    "VS",
+    "VERSUS",
+    "COMPARE",
+    "WHICH",
+    "LOOKS",
+    "STRONGER",
+    "TODAY",
+    "BUY",
+    "SELL",
+    "HOLD",
+  ]);
+
+  const matches = question
+    .toUpperCase()
+    .match(/\b[A-Z]{1,5}\b/g);
+
+  if (!matches) return null;
+
+  const tickers = matches.filter((word) => !ignoredWords.has(word));
+
+  if (tickers.length < 2) return null;
+
+  return {
+    primary: tickers[0],
+    secondary: tickers[1],
+  };
+}
+
   async function submitQuestion(event) {
     event.preventDefault();
 
@@ -29,7 +67,23 @@ export default function OrionAiPanel({ ticker }) {
     try {
       setChatLoading(true);
       setMessage("");
-      const data = await askOrion(ticker, question.trim(), chatHistory);
+     const compare = detectComparison(question);
+
+     let data;
+
+     if (compare) {
+       data = await compareStocks(
+         compare.primary,
+         compare.secondary,
+         question
+       );
+} else {
+  data = await askOrion(
+    ticker,
+    question.trim(),
+    chatHistory
+  );
+}
 
       setChatHistory((current) => [
         ...current,
@@ -124,7 +178,7 @@ export default function OrionAiPanel({ ticker }) {
         </button>
       </form>
 
-      {chatHistory.length > 0 && (
+{chatHistory.length > 0 && (
   <div className="orion-chat-history">
     {chatHistory.map((item, chatIndex) => (
       <div className="orion-chat-pair" key={`${item.question}-${chatIndex}`}>

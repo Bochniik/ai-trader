@@ -7,6 +7,7 @@ from app.services.bot_engine import BotEngine
 from datetime import timezone
 from pydantic import BaseModel
 from app.services.orion_ai_service import analyze_with_llm, ask_orion
+from app.services.orion_ai_service import analyze_with_llm, ask_orion, compare_stocks
 
 router = APIRouter()
 
@@ -14,6 +15,11 @@ class OrionChatRequest(BaseModel):
     ticker: str
     question: str
     history: list[dict] = []
+
+class OrionCompareRequest(BaseModel):
+    primary: str
+    secondary: str
+    question: str = ""
 
 market = MarketDataService()
 analysis = AnalysisEngine()
@@ -186,6 +192,27 @@ def get_orion_ai_analysis(ticker: str):
 def chat_with_orion(request: OrionChatRequest):
     ticker = request.ticker.upper()
 
+def build_orion_context(ticker: str):
+    ticker = ticker.upper()
+
+    quote = market.get_quote(ticker)
+    news_response = market.get_news(ticker)
+    history = market.get_price_history(ticker)
+    technical_analysis = analysis.analyze(ticker, history)
+
+    news_items = (
+        news_response.get("news", [])
+        if isinstance(news_response, dict)
+        else news_response
+    )
+
+    return {
+        "ticker": ticker,
+        "quote": quote,
+        "technical_analysis": technical_analysis,
+        "recent_news": news_items[:6],
+    }
+
     try:
         quote = market.get_quote(ticker)
         news_response = market.get_news(ticker)
@@ -209,4 +236,29 @@ def chat_with_orion(request: OrionChatRequest):
         )
     except Exception as exc:
         print("ORION CHAT ERROR:", repr(exc))
+        raise HTTPException(status_code=400, detail=str(exc))
+
+@router.post("/orion-ai/compare")
+def compare_with_orion(request: OrionCompareRequest):
+    primary = request.primary.upper()
+    secondary = request.secondary.upper()
+
+    try:
+        primary_context = build_orion_context(primary)
+        secondary_context = build_orion_context(secondary)
+
+        question = (
+            request.question
+            or f"Compare {primary} and {secondary}. Which setup looks stronger today?"
+        )
+
+        return compare_stocks(
+            primary_symbol=primary,
+            secondary_symbol=secondary,
+            primary_context=primary_context,
+            secondary_context=secondary_context,
+            question=question,
+        )
+    except Exception as exc:
+        print("ORION COMPARE ERROR:", repr(exc))
         raise HTTPException(status_code=400, detail=str(exc))
