@@ -125,25 +125,26 @@ export default function OrionAiPanel({ ticker }) {
       </form>
 
       {chatHistory.length > 0 && (
-        <div className="orion-chat-history">
-          {chatHistory.map((item, chatIndex) => (
-            <div
-              className="orion-chat-answer"
-              key={`${item.question}-${chatIndex}`}
-            >
-              <strong>You asked:</strong>
-              <p>{item.question}</p>
-
-              <strong>Orion says:</strong>
-              <div className="orion-answer-block">
-                {formatOrionAnswer(item.answer).map((line, lineIndex) => (
-                  <p key={`${chatIndex}-${lineIndex}`}>{line}</p>
-                ))}
-              </div>
-            </div>
-          ))}
+  <div className="orion-chat-history">
+    {chatHistory.map((item, chatIndex) => (
+      <div className="orion-chat-pair" key={`${item.question}-${chatIndex}`}>
+        <div className="chat-bubble user-bubble">
+          <span className="chat-label">You</span>
+          <p>{item.question}</p>
         </div>
-      )}
+
+        <div className="chat-bubble orion-bubble">
+          <span className="chat-label">Orion AI</span>
+          <div className="orion-answer-block">
+            {formatOrionAnswer(item.answer).map((line, lineIndex) => (
+              <p key={`${chatIndex}-${lineIndex}`}>{line}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
     </section>
   );
 }

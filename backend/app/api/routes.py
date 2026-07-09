@@ -205,6 +205,7 @@ def chat_with_orion(request: OrionChatRequest):
             news_items=news_items,
             question=request.question,
             history=request.history,
+            portfolio=paper.portfolio(),
         )
     except Exception as exc:
         print("ORION CHAT ERROR:", repr(exc))

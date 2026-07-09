@@ -835,3 +835,52 @@ th, td {
   gap: 14px;
   margin-top: 18px;
 }
+
+.orion-chat-history {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.orion-chat-pair {
+  display: grid;
+  gap: 10px;
+}
+
+.chat-bubble {
+  max-width: 92%;
+  padding: 14px 16px;
+  border-radius: 18px;
+  line-height: 1.5;
+}
+
+.user-bubble {
+  justify-self: end;
+  background: #2563eb;
+  color: white;
+  border-bottom-right-radius: 6px;
+}
+
+.orion-bubble {
+  justify-self: start;
+  background: #020617;
+  border: 1px solid #334155;
+  color: #e5e7eb;
+  border-bottom-left-radius: 6px;
+}
+
+.chat-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #bfdbfe;
+}
+
+.user-bubble .chat-label {
+  color: #dbeafe;
+}
+
+.chat-bubble p {
+  margin: 8px 0;
+}
